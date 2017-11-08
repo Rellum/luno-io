@@ -1,0 +1,28 @@
+{
+  "name": "luno-io",
+  "version": "1.0.0",
+  "description": "A client for the luno websocket api",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "Luno",
+    "Websocket",
+    "Bitcoin",
+    "Exchange",
+    "Trading"
+  ],
+  "author": "Vaughan Muller",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "sinon": "^4.1.1",
+    "standard": "^10.0.3"
+  },
+  "dependencies": {
+    "queue": "^4.4.2",
+    "websocket": "^1.0.25"
+  }
+}
