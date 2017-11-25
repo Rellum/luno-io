@@ -67,6 +67,15 @@ describe('State', function () {
     expect(lunoBook.state(initialMessage)).to.be.true
 
     expect(lunoBook.state()).to.equal(initialMessage)
+    expect(lunoBook.getOrder).to.be.a('function')
+
+    let lunoOrder = lunoBook.getOrder('3498282')
+    expect(lunoOrder).to.be.a('luno-order')
+    expect(lunoOrder.getVolume('BTC')).to.equal(1.22)
+
+    lunoOrder = lunoBook.getOrder('23298344')
+    expect(lunoOrder).to.be.a('luno-order')
+    expect(lunoOrder.getVolume('BTC')).to.equal(0.94)
 
     const createUpdateMessage1 = {
       sequence: '24353',
