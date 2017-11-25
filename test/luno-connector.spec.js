@@ -4,13 +4,13 @@ const expect = require('chai').expect
 const LunoConnector = require('./../lib/luno-connector')
 const sinon = require('sinon')
 
-describe('Constructor', function () {
-  it('should be a constructor', function () {
-    const actual = new LunoConnector()
-
-    expect(actual).to.be.an('object')
-  })
-})
+// describe('Constructor', function () {
+//   it('should be a constructor', function () {
+//     const actual = new LunoConnector()
+//
+//     expect(actual).to.be.an('object')
+//   })
+// })
 
 // describe('getNextMessage', function () {
 //   it('should have a getNextMessage method', function () {

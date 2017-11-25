@@ -71,11 +71,15 @@ describe('State', function () {
 
     let lunoOrder = lunoBook.getOrder('3498282')
     expect(lunoOrder).to.be.a('luno-order')
-    expect(lunoOrder.getVolume('BTC')).to.equal(1.22)
+    expect(lunoOrder.getVolume()).to.equal(1.22)
+    expect(lunoOrder.getPrice()).to.equal(1201.00)
+    expect(lunoOrder.getType()).to.equal('BID')
 
     lunoOrder = lunoBook.getOrder('23298344')
     expect(lunoOrder).to.be.a('luno-order')
-    expect(lunoOrder.getVolume('BTC')).to.equal(0.94)
+    expect(lunoOrder.getVolume()).to.equal(0.94)
+    expect(lunoOrder.getPrice()).to.equal(1237.00)
+    expect(lunoOrder.getType()).to.equal('ASK')
 
     const createUpdateMessage1 = {
       sequence: '24353',
@@ -90,6 +94,12 @@ describe('State', function () {
       timestamp: 1469031991
     }
     expect(lunoBook.state(createUpdateMessage1)).to.be.true
+
+    lunoOrder = lunoBook.getOrder('12345678')
+    expect(lunoOrder).to.be.a('luno-order')
+    expect(lunoOrder.getVolume()).to.equal(1.23)
+    expect(lunoOrder.getPrice()).to.equal(1202.00)
+    expect(lunoOrder.getType()).to.equal('BID')
     
     const createUpdateMessage2 = {
       sequence: '24354',
@@ -118,6 +128,12 @@ describe('State', function () {
       timestamp: 1469031993
     }
     expect(lunoBook.state(createUpdateMessage3)).to.be.true
+
+    lunoOrder = lunoBook.getOrder('12345680')
+    expect(lunoOrder).to.be.a('luno-order')
+    expect(lunoOrder.getVolume()).to.equal(0.96)
+    expect(lunoOrder.getPrice()).to.equal(1234.00)
+    expect(lunoOrder.getType()).to.equal('ASK')
     
     const createUpdateMessage4 = {
       sequence: '24356',
@@ -190,6 +206,9 @@ describe('State', function () {
       timestamp: 1469031997
     }
     expect(lunoBook.state(tradeUpdateMessage7)).to.be.true
+
+    lunoOrder = lunoBook.getOrder('3498284')
+    expect(lunoOrder.getVolume()).to.equal(1.21)
     
     const deleteUpdateMessage8 = {
       sequence: '24360',
@@ -223,7 +242,8 @@ describe('State', function () {
         {
           id: '23298345',
           price: '1237.00',
-          volume: '0.95'
+          volume: '0.95',
+          type: 'ASK'
         },
         {
           id: '12345680',
@@ -233,7 +253,8 @@ describe('State', function () {
         {
           id: '23298343',
           price: '1234.00',
-          volume: '0.83'
+          volume: '0.83',
+          type: 'ASK'
         },
         {
           id: '12345683',
@@ -260,12 +281,14 @@ describe('State', function () {
         {
           id: '3498284',
           price: '1199.00',
-          volume: '1.21'
+          volume: '1.21',
+          type: 'BID'
         },
         {
           id: '3498285',
           price: '1199.00',
-          volume: '1.22'
+          volume: '1.22',
+          type: 'BID'
         },
         {
           id: '12345682',
