@@ -8,4 +8,4 @@ const credentials = require('./credentials')
 
 const lunoConnector = new LunoConnector(credentials)
 
-setInterval(() => debug(LunoUtil.makeTicker(lunoConnector.getOrderbook())), 2000)
+setInterval(() => debug(lunoConnector.lunoBook.getTicker()), 2000)

@@ -246,12 +246,20 @@ describe('processTradeUpdate', function () {
       order_id: '23298343',
       volume: '1.23'
     })
-    lunoOrder.processTradeUpdate({
+    let actual = lunoOrder.processTradeUpdate({
       base: '0.1',
       counter: '123.40', // not implemented yet
       order_id: '23298343'
     })
+    expect(actual).to.be.true
     expect(lunoOrder._volume).to.equal(1.13)
+    actual = lunoOrder.processTradeUpdate({
+      base: 1.13,
+      counter: '123.40', // not implemented yet
+      order_id: '23298343'
+    })
+    expect(actual).to.be.false
+    expect(lunoOrder._volume).to.equal(0)
   })
 
   it('should not reduce outstanding volume if id does not match', function () {
@@ -266,3 +274,24 @@ describe('processTradeUpdate', function () {
     expect(lunoOrder._volume).to.equal(1.23)
   })
 })
+
+describe('toSimple', function () {
+  it('should be a function', function () {
+    const actual = LunoOrder()
+    expect(actual.toSimple).to.be.a('function')
+  })
+
+  it('should return a literal of itself', function () {
+    const expected = {
+      id: '23298345',
+      price: '1237.00',
+      volume: '0.95',
+      type: 'ASK'
+    }
+
+    const lunoOrder = LunoOrder(expected)
+
+    expect(lunoOrder.toSimple()).to.deep.equal(expected)
+  })
+})
+
