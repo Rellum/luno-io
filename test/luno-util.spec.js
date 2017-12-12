@@ -28,6 +28,10 @@ describe('convertSatoshisToDecimalString', function () {
   it('should be a function', function () {
     expect(LunoUtil.convertSatoshisToDecimalString).to.be.a('function')
   })
+
+  it('should convert correctly', function () {
+    expect(LunoUtil.convertSatoshisToDecimalString(102389700)).to.equal('1.023897')
+  })
 })
 
 describe('convertSatoshisToDecimalString', function () {

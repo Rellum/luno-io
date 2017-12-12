@@ -4,6 +4,7 @@
   "description": "A client for the luno websocket api",
   "main": "index.js",
   "scripts": {
+    "start": "example/periodically-output-ticker.js",
     "test": "mocha"
   },
   "keywords": [
@@ -17,6 +18,7 @@
   "license": "ISC",
   "repository": "github:Rellum/luno-io",
   "devDependencies": {
+    "casual": "^1.5.17",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
     "sinon": "^4.1.1",
@@ -24,6 +26,7 @@
     "standard": "^10.0.3"
   },
   "dependencies": {
+    "backoff": "^2.5.0",
     "bitx": "^1.5.1",
     "queue": "^4.4.2",
     "websocket": "^1.0.25"

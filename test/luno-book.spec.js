@@ -378,7 +378,73 @@ describe('getMinAskPrice', function () {
   })
 })
 
+describe('Sequence check', function () {
+  it('should reset if sequence is wrong', function () {
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.isLive()).to.be.false
+    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
+    expect(lunoBook.isLive()).to.be.true
+
+    expect(lunoBook.getTicker()).to.not.be.undefined
+
+    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.false
+    expect(lunoBook.isLive()).to.be.false
+
+    expect(lunoBook.getTicker()).to.be.undefined
+
+    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
+    expect(lunoBook.isLive()).to.be.true
+  })
+})
+
 describe('getDeletedOrders', function () {
+  it('should return list of deleted orders', function () {
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.getDeletedOrders).to.be.a('function')
+    expect(lunoBook.getDeletedOrders()).to.be.undefined
+
+    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
+    expect(lunoBook.getDeletedOrders()).to.deep.equal([])
+
+    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
+    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
+    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
+    expect(lunoBook.getDeletedOrders()).to.deep.equal(['3498283', '3498282'])
+    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
+    expect(lunoBook.getDeletedOrders()).to.deep.equal(['3498283', '3498282', '23298344'])
+  })
+})
+
+describe('isLive', function () {
+  it('should have an isLive method', function () {
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.isLive).to.be.a('function')
+    expect(lunoBook.isLive()).to.be.false
+    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
+    expect(lunoBook.isLive()).to.be.true
+  })
+})
+
+describe('flush', function () {
+  it('should have a flush method', function () {
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.flush).to.be.a('function')
+    expect(lunoBook.flush()).to.be.false
+    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
+    expect(lunoBook.flush()).to.be.true
+
+    expect(lunoBook.getTicker()).to.be.undefined
+  })
+
   it('should return list of deleted orders', function () {
     const lunoBook = new LunoBook()
 

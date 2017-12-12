@@ -244,21 +244,29 @@ describe('processTradeUpdate', function () {
   it('should reduce outstanding volume', function () {
     const lunoOrder = LunoOrder({
       order_id: '23298343',
-      volume: '1.23'
+      volume: '1.0245'
     })
     let actual = lunoOrder.processTradeUpdate({
-      base: '0.1',
+      base: '0.000603',
       counter: '123.40', // not implemented yet
       order_id: '23298343'
     })
-    expect(actual).to.be.true
-    expect(lunoOrder._volume).to.equal(1.13)
+    expect(actual).to.be.a('luno-order')
+    expect(actual._volume).to.equal(1.023897)
     actual = lunoOrder.processTradeUpdate({
-      base: 1.13,
+      base: 1.023896,
       counter: '123.40', // not implemented yet
       order_id: '23298343'
     })
-    expect(actual).to.be.false
+    expect(actual).to.be.a('luno-order')
+    expect(actual._volume).to.equal(0.000001)
+    actual = lunoOrder.processTradeUpdate({
+      base: 0.000001,
+      counter: '123.40', // not implemented yet
+      order_id: '23298343'
+    })
+    expect(actual).to.be.a('luno-order')
+    expect(actual._volume).to.equal(0)
     expect(lunoOrder._volume).to.equal(0)
   })
 
