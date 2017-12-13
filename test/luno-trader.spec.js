@@ -52,6 +52,6 @@ describe('placeOrder', function () {
     const lunoTrader = new LunoTrader()
     lunoTrader.placeOrder({price, volume, type})
     expect(https.request.calledOnce).to.be.true
-    expect(request.write.getCall(0).args).to.deep.equal(["type=" + type + "&volume=" + volume + "&price=" + price + "&pair=XBTZAR"])
+    expect(request.write.getCall(0).args).to.deep.equal(["type=" + type + "&volume=" + (volume + 1) + "&price=" + price + "&pair=XBTZAR"])
   })
 })
