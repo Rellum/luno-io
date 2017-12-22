@@ -2,8 +2,10 @@
 
 const expect = require('chai').expect
 const LunoBook = require('./../lib/luno-book')
+const LunoOrder = require('./../lib/luno-order')
 const testState = require('./test-state')
 const sinon = require('sinon')
+var casual = require('casual')
 
 describe('Constructor', function () {
   it('should be a constructor', function () {
@@ -87,6 +89,45 @@ describe('State', function () {
     expect(marketChangeEventSpy.callCount).to.equal(10)
     expect(marketChangeEventSpy.withArgs('update').callCount).to.equal(9)
   })
+  
+  it('should emit orderCreated event', function () {
+    const lunoBook = new LunoBook()
+
+    const orderCreatedEventSpy = sinon.spy()
+    lunoBook.eventEmitter.on('orderCreated', orderCreatedEventSpy)
+
+    lunoBook.state(testState.getInitialMessage())
+    expect(orderCreatedEventSpy.callCount).to.equal(0)
+
+    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
+    expect(orderCreatedEventSpy.callCount).to.equal(1)
+    expect(orderCreatedEventSpy.args[0][0]).to.be.a('luno-order')
+    expect(orderCreatedEventSpy.args[0][0].getId()).to.equal('12345678')
+
+    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
+    expect(orderCreatedEventSpy.callCount).to.equal(2)
+    expect(orderCreatedEventSpy.args[1][0].getId()).to.equal('12345679')
+
+    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
+    expect(orderCreatedEventSpy.callCount).to.equal(3)
+    expect(orderCreatedEventSpy.args[2][0].getId()).to.equal('12345680')
+
+    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
+    expect(orderCreatedEventSpy.callCount).to.equal(4)
+    expect(orderCreatedEventSpy.args[3][0].getId()).to.equal('12345681')
+
+    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
+    expect(orderCreatedEventSpy.callCount).to.equal(5)
+    expect(orderCreatedEventSpy.args[4][0].getId()).to.equal('12345682')
+
+    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
+    expect(orderCreatedEventSpy.callCount).to.equal(6)
+    expect(orderCreatedEventSpy.args[5][0].getId()).to.equal('12345683')
+
+    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
+    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
+    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
+  })
 
   it('should return specific orders', function () {
     const lunoBook = new LunoBook()
@@ -158,7 +199,7 @@ describe('getTicker', function () {
       ask: 1234,
       timestamp: null,
       bid: 1201,
-      rolling_24_hour_volume: '12.52', // not implemented
+      rolling_24_hour_volume: null,
       last_trade: null
     })
 
@@ -176,8 +217,8 @@ describe('getTicker', function () {
       ask: 1233,
       timestamp: 1469031999,
       bid: 1203,
-      rolling_24_hour_volume: '12.52', // not implemented
-      last_trade: 1199.00
+      rolling_24_hour_volume: '1.330',
+      last_trade: 1200.00
     })
   })
 
@@ -197,7 +238,7 @@ describe('getTicker', function () {
       ask: 1237,
       timestamp: null,
       bid: 1201,
-      rolling_24_hour_volume: '12.52', // not implemented
+      rolling_24_hour_volume: null,
       last_trade: null
     })
 
@@ -222,8 +263,8 @@ describe('getTicker', function () {
       ask: 1234,
       timestamp: 1469031999,
       bid: 1199,
-      rolling_24_hour_volume: '12.52', // not implemented
-      last_trade: 1199.00
+      rolling_24_hour_volume: '1.330', // not implemented
+      last_trade: 1200.00
     })
   })
 })
@@ -430,6 +471,85 @@ describe('isLive', function () {
     expect(lunoBook.isLive()).to.be.false
     expect(lunoBook.state(testState.getInitialMessage())).to.be.true
     expect(lunoBook.isLive()).to.be.true
+  })
+})
+
+describe('isOrderMarketable', function () {
+  it('should have an isOrderMarketable method', function () {
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.isOrderMarketable).to.be.a('function')
+  })
+  
+  it('should return false if volume is too high', function () {
+    const lunoBook = new LunoBook()
+    
+    lunoBook.state(testState.getInitialMessage())
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'ASK', price: 1201, volume: 0}))).to.be.true
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'ASK', price: 1201, volume: 1.22}))).to.be.true
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'ASK', price: 1201, volume: 1.23}))).to.be.false
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'ASK', price: 1202}))).to.be.false
+
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'BID', price: 1234, volume: 0}))).to.be.true
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'BID', price: 1234, volume: 0.93}))).to.be.true
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'BID', price: 1234, volume: 0.94}))).to.be.false
+    expect(lunoBook.isOrderMarketable(new LunoOrder({type: 'BID', price: 1233}))).to.be.false
+
+    lunoBook.state(testState.getCreateUpdate1())
+    lunoBook.state(testState.getCreateUpdate2())
+    lunoBook.state(testState.getCreateUpdate3())
+    lunoBook.state(testState.getCreateUpdate4())
+    lunoBook.state(testState.getCreateUpdate5())
+    lunoBook.state(testState.getCreateUpdate6())
+    lunoBook.state(testState.getTradeUpdateMessage7())
+    lunoBook.state(testState.getDeleteUpdateMessage8())
+    lunoBook.state(testState.getDeleteUpdateMessage9())
+  })
+})
+
+describe('getBidDepth', function () {
+  it('should have a getBidDepth method', function () {
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.getBidDepth).to.be.a('function')
+  })
+
+  it('should return depth', function () {
+    const lunoBook = new LunoBook()
+    
+    expect(lunoBook.getBidDepth()).to.be.undefined
+    expect(lunoBook.getBidDepth({price: 1200})).to.be.undefined
+
+    lunoBook.state(testState.getInitialMessage())
+    expect(lunoBook.getBidDepth({})).to.be.undefined
+    expect(lunoBook.getBidDepth({price: Number.POSITIVE_INFINITY})).to.equal(0)
+    expect(lunoBook.getBidDepth({price: 1200})).to.equal(2.44)
+    expect(lunoBook.getBidDepth({price: Number.NEGATIVE_INFINITY})).to.equal(4.88)
+    expect(lunoBook.getBidDepth({price: Number.NEGATIVE_INFINITY, exclude: [casual.random_element(['3498282', '3498283', '3498284', '3498285'])]})).to.equal(3.66)
+    expect(lunoBook.getBidDepth({price: Number.NEGATIVE_INFINITY, exclude: ['3498282', '3498283', '7498284', '7498285']})).to.equal(2.44)
+  })
+})
+
+describe('getAskDepth', function () {
+  it('should have a getAskDepth method', function () {
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.getAskDepth).to.be.a('function')
+  })
+
+  it('should return depth', function () {
+    const lunoBook = new LunoBook()
+    
+    expect(lunoBook.getAskDepth()).to.be.undefined
+    expect(lunoBook.getAskDepth({price: 1234})).to.be.undefined
+
+    lunoBook.state(testState.getInitialMessage())
+    expect(lunoBook.getAskDepth({})).to.be.undefined
+    expect(lunoBook.getAskDepth({price: Number.NEGATIVE_INFINITY})).to.equal(0)
+    expect(lunoBook.getAskDepth({price: 1234})).to.equal(0.93)
+    expect(lunoBook.getAskDepth({price: Number.POSITIVE_INFINITY})).to.equal(2.82)
+    expect(lunoBook.getAskDepth({price: Number.POSITIVE_INFINITY, exclude: ['23298344']})).to.equal(1.88)
+    expect(lunoBook.getAskDepth({price: Number.POSITIVE_INFINITY, exclude: ['3498282', '3498283', '7498284', '7498285']})).to.equal(2.82)
   })
 })
 
