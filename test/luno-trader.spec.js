@@ -7,6 +7,7 @@ var PassThrough = require('stream').PassThrough
 const sinon = require('sinon')
 var casual = require('casual')
 var sandbox = sinon.sandbox.create()
+const LunoCurrency = require('./../lib/luno-connector')
 
 var chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -47,7 +48,7 @@ describe('placeOrder', function () {
     const lunoTrader = new LunoTrader(new LunoBook(), credentials)
     lunoTrader.placeOrder()
     expect(https.request.calledOnce).to.be.true
-    expect(request.write.getCall(0).args).to.deep.equal(["type=BID&volume=0.0005&price=215000&pair=XBTZAR"])
+    expect(request.write.getCall(0).args).to.deep.equal(["type=BID&volume=0.0005&price=10&pair=XBTZAR"])
   })
   
   it('should use given options', function () {
@@ -81,5 +82,44 @@ describe('placeOrder', function () {
     expect(lunoTrader.placeOrder({price, volume, type, notMarketable: true})).to.be.rejected
     expect(lunoBook.isOrderMarketable.called).to.be.true
     expect(https.request.called).to.be.false
+  })
+})
+
+describe('exchange', function () {
+  beforeEach(function () {
+    sandbox.stub(https, 'request')
+  })
+
+  afterEach(function () {
+    sandbox.restore()
+  })
+
+  it('should be a function', function () {
+    const lunoTrader = new LunoTrader(new LunoBook(), credentials)
+    expect(lunoTrader.exchange).to.be.a('function')
+  })
+  
+  it('should place a buy order', function () {
+    var request = new PassThrough()
+    sinon.spy(request, 'write')
+    https.request.returns(request)
+
+    // const fromAmount = new LunoCurrency(casual.double(500, 750).toFixed(2), 'ZAR')
+
+    const lunoTrader = new LunoTrader(new LunoBook(), credentials)
+    lunoTrader.exchange()
+    expect(https.request.calledOnce).to.be.true
+    expect(request.write.getCall(0).args).to.deep.equal(["type=BID&volume=0.0005&price=10&pair=XBTZAR"])
+  })
+  
+  it('should place a sell order', function () {
+    var request = new PassThrough()
+    sinon.spy(request, 'write')
+    https.request.returns(request)
+
+    const lunoTrader = new LunoTrader(new LunoBook(), credentials)
+    lunoTrader.exchange({from: 'XBT', to: 'ZAR'})
+    expect(https.request.calledOnce).to.be.true
+    expect(request.write.getCall(0).args).to.deep.equal(["type=ASK&volume=0.0005&price=10&pair=XBTZAR"])
   })
 })

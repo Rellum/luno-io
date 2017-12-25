@@ -345,80 +345,6 @@ describe('getMinAskPrice', function () {
   })
 })
 
-describe('getMinAskPrice', function () {
-  it('should calculate max bid price', function () {
-    const lunoBook = new LunoBook()
-
-    expect(lunoBook.getMaxBidPrice).to.be.a('function')
-    expect(lunoBook.getMaxBidPrice()).to.be.undefined
-
-    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1201)
-
-    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1202)
-
-    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1202)
-
-    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1202)
-
-    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1202)
-
-    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1202)
-
-    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1202)
-
-    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1203)
-
-    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1203)
-
-    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
-    expect(lunoBook.getMaxBidPrice()).to.equal(1203)
-  })
-
-  it('should exclude specific orders', function () {
-    const lunoBook = new LunoBook()
-
-    const options = {
-      exclude: [
-        '3498282',
-        '3498283'
-      ]
-    }
-
-    expect(lunoBook.getMaxBidPrice(options)).to.be.undefined
-
-    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
-    expect(lunoBook.getMaxBidPrice(options)).to.equal(1199)
-
-    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
-
-    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
-    options.exclude = [
-      '12345684'
-    ]
-    expect(lunoBook.getMaxBidPrice(options)).to.equal(1202)
-    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
-    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
-    options.exclude = [
-      '12345684'
-    ]
-    expect(lunoBook.getMaxBidPrice(options)).to.equal(1202)
-  })
-})
-
 describe('Sequence check', function () {
   it('should reset if sequence is wrong', function () {
     const lunoBook = new LunoBook()
@@ -588,4 +514,105 @@ describe('flush', function () {
   })
 })
 
+describe('getBidAskDirection', function () {
+  it('should have a getBidAskDirection method', function () {
+    const lunoBook = new LunoBook()
 
+    expect(lunoBook.getBidAskDirection).to.be.a('function')
+    expect(lunoBook.getBidAskDirection()).to.be.null
+    expect(lunoBook.getBidAskDirection()).to.not.be.undefined
+    expect(lunoBook.getBidAskDirection({fromCurrency: 'ZAR', toCurrency: 'XBT'})).to.equal('BID')
+    expect(lunoBook.getBidAskDirection({fromCurrency: 'XBT', toCurrency: 'ZAR'})).to.equal('ASK')
+    expect(lunoBook.getBidAskDirection({fromCurrency: 'XBT1', toCurrency: 'ZAR'})).to.be.undefined
+    expect(lunoBook.getBidAskDirection({fromCurrency: 'XBT1', toCurrency: 'ZAR'})).to.not.be.null
+    expect(lunoBook.getBidAskDirection({fromCurrency: 'XBT', toCurrency: 'ZAR1'})).to.be.undefined
+    expect(lunoBook.getBidAskDirection({fromCurrency: 'XBT', toCurrency: 'ZAR1'})).to.not.be.null
+  })
+})
+
+describe('getBestPrice', function () {
+  it('should have a getBestPrice method', function () {
+    const lunoBook = new LunoBook()
+
+    function checkPrices (bid, mid, ask) {
+      expect(lunoBook.getBestPrice({toCurrency: 'XBT', fromCurrency: 'ZAR'})).to.equal(bid)
+      expect(lunoBook.getBestPrice()).to.equal(mid)
+      expect(lunoBook.getBestPrice({toCurrency: 'ZAR', fromCurrency: 'XBT'})).to.equal(ask)
+    }
+
+    expect(lunoBook.getBestPrice).to.be.a('function')
+    expect(lunoBook.getBestPrice()).to.be.undefined
+
+    lunoBook.state(testState.getInitialMessage())
+    checkPrices(1201, 1217.5, 1234)
+
+    lunoBook.state(testState.getCreateUpdate1())
+    checkPrices(1202, 1218, 1234)
+
+    lunoBook.state(testState.getCreateUpdate2())
+    checkPrices(1202, 1218, 1234)
+
+    lunoBook.state(testState.getCreateUpdate3())
+    checkPrices(1202, 1218, 1234)
+
+    lunoBook.state(testState.getCreateUpdate4())
+    checkPrices(1202, 1218, 1234)
+
+    lunoBook.state(testState.getCreateUpdate5())
+    checkPrices(1202, 1218, 1234)
+
+    lunoBook.state(testState.getCreateUpdate6())
+    checkPrices(1202, 1217.5, 1233)
+
+    lunoBook.state(testState.getTradeUpdateMessage7())
+    checkPrices(1203, 1218, 1233)
+
+    lunoBook.state(testState.getDeleteUpdateMessage8())
+    checkPrices(1203, 1218, 1233)
+
+    lunoBook.state(testState.getDeleteUpdateMessage9())
+    checkPrices(1203, 1218, 1233)
+    
+    expect(lunoBook.getBestPrice({toCurrency: 'ZAR1', fromCurrency: 'XBT'})).to.be.undefined
+    expect(lunoBook.getBestPrice({toCurrency: '1ZAR', fromCurrency: 'XBT'})).to.be.undefined
+    expect(lunoBook.getBestPrice({toCurrency: 'ZAR', fromCurrency: 'XBT1'})).to.be.undefined
+    expect(lunoBook.getBestPrice({toCurrency: 'ZAR', fromCurrency: '1XBT'})).to.be.undefined
+  })
+
+  it('should exclude specific orders', function () {
+    const lunoBook = new LunoBook()
+
+    const options = {
+      fromCurrency: 'ZAR',
+      toCurrency: 'XBT',
+      exclude: [
+        '3498282',
+        '3498283'
+      ]
+    }
+
+    expect(lunoBook.getBestPrice(options)).to.be.undefined
+
+    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
+    expect(lunoBook.getBestPrice(options)).to.equal(1199)
+
+    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
+
+    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
+    options.exclude = [
+      '12345684'
+    ]
+    expect(lunoBook.getBestPrice(options)).to.equal(1202)
+    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
+    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
+    options.exclude = [
+      '12345684'
+    ]
+    expect(lunoBook.getBestPrice(options)).to.equal(1202)
+  })
+})

@@ -11,5 +11,5 @@ const lunoConnector = new LunoConnector(credentials)
 const lunoTrader = new LunoTrader(lunoConnector.lunoBook, tradeCredentials)
 
 setTimeout(function startPingPong () {
-  lunoTrader.placeOrder({notMarketable: true}).then((value) => debug(value))
-})
+  lunoTrader.placeOrder({price: 100000, notMarketable: true}).then((value) => debug(value))
+}, 3000)
