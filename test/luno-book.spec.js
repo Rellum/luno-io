@@ -88,6 +88,8 @@ describe('State', function () {
     expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
     expect(marketChangeEventSpy.callCount).to.equal(10)
     expect(marketChangeEventSpy.withArgs('update').callCount).to.equal(9)
+    
+    lunoBook.eventEmitter.removeAllListeners()
   })
   
   it('should emit orderCreated event', function () {
@@ -127,11 +129,14 @@ describe('State', function () {
     expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
     expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
     expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
+    
+    lunoBook.eventEmitter.removeAllListeners()
   })
 
   it('should return specific orders', function () {
     const lunoBook = new LunoBook()
 
+    expect(lunoBook.getOrder('3498282')).to.be.undefined
     expect(lunoBook.state(testState.getInitialMessage())).to.be.true
 
     expect(lunoBook.getOrder).to.be.a('function')
@@ -184,6 +189,107 @@ describe('State', function () {
     expect(lunoBook.getOrder('3498282')).to.not.be.ok
 
     expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
+  })
+})
+
+describe('getOrderAsync', function () {
+  function checkAsyncOrder (expected, actual) {
+    expect(actual).to.be.a('luno-order')
+    expect(actual.getVolume()).to.equal(expected.volume)
+    expect(actual.getPrice()).to.equal(expected.price)
+    expect(actual.getType()).to.equal(expected.type)
+  }
+
+  it('should return specific orders synchronously', function () {
+    const lunoBook = new LunoBook()
+
+    lunoBook.state(testState.getInitialMessage())
+
+    expect(lunoBook.getOrderAsync).to.be.a('function')
+
+    lunoBook.getOrderAsync('3498282')
+    .then(function (data) { checkAsyncOrder({volume: 1.22, price: 1201.00, type: 'BID'}, data) })
+
+    lunoBook.getOrderAsync('23298344')
+    .then(function (data) { checkAsyncOrder({volume: 0.94, price: 1237.00, type: 'ASK'}, data) })
+
+    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
+
+    lunoBook.getOrderAsync('12345678')
+    .then(function (data) { checkAsyncOrder({volume: 1.23, price: 1202.00, type: 'BID'}, data) })
+
+    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
+
+    lunoBook.getOrderAsync('12345680')
+    .then(function (data) { checkAsyncOrder({volume: 0.96, price: 1234.00, type: 'ASK'}, data) })
+
+    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
+    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
+    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
+
+    lunoBook.getOrderAsync('3498284')
+    .then(function (data) { checkAsyncOrder({volume: 1.21, price: 1199, type: 'BID'}, data) })
+
+    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
+
+    lunoBook.getOrderAsync('12345684')
+    .then(function (data) { checkAsyncOrder({volume: 4.04, price: 1203.00, type: 'BID'}, data) })
+
+    lunoBook.getOrderAsync('3498282')
+    .catch(function (error) {
+      expect(error).to.be.an('error')
+    })
+
+    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
+  })
+
+  it('should return specific orders asynchronously', function (done) {
+    const spiedGetOrderAsync = sinon.spy(checkAsyncOrder)
+    const lunoBook = new LunoBook()
+
+    expect(lunoBook.getOrderAsync).to.be.a('function')
+    
+    const orderPromises = []
+    orderPromises.push(lunoBook.getOrderAsync('3498282'))
+    orderPromises.push(lunoBook.getOrderAsync('23298344'))
+    orderPromises.push(lunoBook.getOrderAsync('12345678'))
+    orderPromises.push(lunoBook.getOrderAsync('12345680'))
+    orderPromises.push(lunoBook.getOrderAsync('3498284'))
+    orderPromises.push(lunoBook.getOrderAsync('12345684'))
+    // orderPromises.push(lunoBook.getOrderAsync('3498282'))
+    
+    // orderPromises[orderPromises.length - 1]
+    // .catch(function (error) {
+    //   expect(error).to.be.an('error')
+    // })
+
+    lunoBook.state(testState.getInitialMessage())
+    lunoBook.state(testState.getCreateUpdate1())
+    lunoBook.state(testState.getCreateUpdate2())
+    lunoBook.state(testState.getCreateUpdate3())
+    lunoBook.state(testState.getCreateUpdate4())
+    lunoBook.state(testState.getCreateUpdate5())
+    lunoBook.state(testState.getCreateUpdate6())
+    lunoBook.state(testState.getTradeUpdateMessage7())
+    lunoBook.state(testState.getDeleteUpdateMessage8())
+    lunoBook.state(testState.getDeleteUpdateMessage9())
+
+    Promise.all(orderPromises)
+    .then(function promiseAll (data) {
+      checkAsyncOrder({volume: 1.22, price: 1201.00, type: 'BID'}, data.shift())
+      checkAsyncOrder({volume: 0.94, price: 1237.00, type: 'ASK'}, data.shift())
+      checkAsyncOrder({volume: 1.23, price: 1202.00, type: 'BID'}, data.shift())
+      checkAsyncOrder({volume: 0.96, price: 1234.00, type: 'ASK'}, data.shift())
+      checkAsyncOrder({volume: 1.21, price: 1199.00, type: 'BID'}, data.shift())
+      checkAsyncOrder({volume: 4.04, price: 1203.00, type: 'BID'}, data.shift())
+      expect(lunoBook.eventEmitter.listenerCount()).to.equal(0)
+      done()
+    })
+    .catch(function (err) {
+      console.error(err)
+    })
   })
 })
 
@@ -266,82 +372,6 @@ describe('getTicker', function () {
       rolling_24_hour_volume: '1.330', // not implemented
       last_trade: 1200.00
     })
-  })
-})
-
-describe('getMinAskPrice', function () {
-  it('should calculate min ask price', function () {
-    const lunoBook = new LunoBook()
-
-    expect(lunoBook.getMinAskPrice).to.be.a('function')
-    expect(lunoBook.getMinAskPrice()).to.be.undefined
-
-    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1234)
-
-    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1234)
-
-    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1234)
-
-    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1234)
-
-    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1234)
-
-    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1234)
-
-    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1233)
-
-    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1233)
-
-    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1233)
-
-    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
-    expect(lunoBook.getMinAskPrice()).to.equal(1233)
-  })
-
-  it('should exclude specific orders', function () {
-    const lunoBook = new LunoBook()
-
-    let options = {
-      exclude: [
-        '23298343'
-      ]
-    }
-
-    expect(lunoBook.getMinAskPrice(options)).to.be.undefined
-
-    expect(lunoBook.state(testState.getInitialMessage())).to.be.true
-    expect(lunoBook.getMinAskPrice(options)).to.equal(1237)
-
-    expect(lunoBook.state(testState.getCreateUpdate1())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate2())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate3())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate4())).to.be.true
-    expect(lunoBook.state(testState.getCreateUpdate5())).to.be.true
-
-    expect(lunoBook.state(testState.getCreateUpdate6())).to.be.true
-    options.exclude = [
-      '12345683'
-    ]
-    expect(lunoBook.getMinAskPrice(options)).to.equal(1234)
-
-    expect(lunoBook.state(testState.getTradeUpdateMessage7())).to.be.true
-    expect(lunoBook.state(testState.getDeleteUpdateMessage8())).to.be.true
-    expect(lunoBook.state(testState.getDeleteUpdateMessage9())).to.be.true
-    options.exclude = [
-      '12345683',
-      '12345680',
-      '23298343'
-    ]
-    expect(lunoBook.getMinAskPrice(options)).to.equal(1237)
   })
 })
 
